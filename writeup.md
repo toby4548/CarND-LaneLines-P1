@@ -44,14 +44,11 @@ Now,the pipeline works fine with the firest two test video. After moving to the 
 When the car drive through a shadow area, the lane line in yellow and the road in grey actually have the same brightness levels. This problem can be clearly shown under canny transform and clearly it's almost not possible to detect yellow line under this case. The pipeline is failed.
 ![alt text][image10]
 ![alt text][image11]
-
-
-To overcome this problem, instead of using RGB2GRAY transform, a HSV color transform is applied. 
-![alt text][image12]
-<center>Source: wikipedia</center>
-HSV is better as RGB when we want to detect a certain color. Especially under low light condition. By apply HSV into the pipeline to replace gray scale transform, the detail of lane lines are preserved even when the car is driving through a shadow area. The results are shown in the following figures.
-![alt text][image13]
-![alt text][image14]
+To overcome this problem, instead of using RGB2GRAY transform, a HSV color transform is applied.(Figure from wikipedia) <br>
+![alt text][image12] <br>
+HSV is better as RGB when we want to detect a certain color. Especially under low light condition. By apply HSV into the pipeline to replace gray scale transform, the detail of lane lines are preserved even when the car is driving through a shadow area. The results are shown in the following figures. <br>
+![alt text][image13] <br>
+![alt text][image14] <br>
 
 Another shortcoming is that when the lane line or the vehicle motion is changing rapidly, the detected lane line will also jitter  and not stable. To deal with that, I use a buffer, which store stable lines from the previous 30 frames. The new stable line will be the average of these data. This method improve the stability of lines segnificantly.
 
