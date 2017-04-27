@@ -1,53 +1,83 @@
-#**Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
-
-Overview
----
-
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
-
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+<h1 style="text-align:center">Project1: Finding Lane Lines on the Road</h1>
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
 
-1. Describe the pipeline
+## **Introduction:**
 
-2. Identify any shortcomings
+&emsp;&emsp;The goal of this project is to build up an image pipeline, which takes a frame from a video and process it then return a modified frame. Through this process, the lane line on the road should be detected and marked up.    
 
-3. Suggest possible improvements
+## **Pipe Line Discription:**
 
-We encourage using images in your writeup to demonstrate how your pipeline works.  
+&emsp;&emsp;The image pipeline consisted of 7 steps. 
 
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
+**1.Read in image:**
+At first, the pipeline takes a single 3 - channel RGB image <br>
+ ![alt text][image1] <br>
+**2.Gray scale transform:**
+ Then converts the images to grayscale<br>
+![alt text][image2] <br>
+**3.Gaussian smoothing:**
+ A Gaussian kernel is applied in order to blur the image and eliminate the noise <br>
+![alt text][image3] <br>
+**4.Canny trasform:**
+Use canny edge detector to detect the edge of a lane line. The parameter of the gaussian filter and canny detector has been tuned in order to keep the detected lane edge always available and in good condition. <br>
+![alt text][image4] <br>
+**5.Region of interest mask:**
+For next step, a mask of interst region is applied  to filt out objects which is not interested  in the image. <br>
+![alt text][image5] <br>
+**6.Hough Transform and Hough lines drawn:**
+Apply Hough transform with a tuned parameters to find a lines in the image and draw red lines to mark out them on the image. <br>
+![alt text][image6] <br>
+However, there are many red lines on the image and jitter a lot, so I've also modified the draw_lines() function by devide lines detected by hough transform into 2 groups: Left_Lane_Lines and Right_Lane_Lines. In each group, the mean slope and the mean intercept point are calculated then a single  and solid line is drawn with these data. <br>
+![alt text][image7] <br>
+**7.Return modified image:**
+Combile the Hough line image with the original image and output the modified image. <br>
+![alt text][image8] <br>
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
+## **Potential Shortcomings with the Pipeline:**
+
+&emsp;&emsp;The pipeline seems working fine with a single picture. However, the detected lane lines are not stable enough while dealing with a video input. In order to get more stable result. I've been tuned the parameters in canny and hough transform.  
+
+Now,the pipeline works fine with the firest two test video. After moving to the challenge video, I've found one potential shortcoming. Take the following frame from challenge video as an example. <br>
+![alt text][image9] <br>
+When the car drive through a shadow area, the lane line in yellow and the road in grey actually have the same brightness levels. This problem can be clearly shown under canny transform and clearly it's almost not possible to detect yellow line under this case. The pipeline is failed. <br>
+![alt text][image10] <br>
+![alt text][image11] <br>
+To overcome this problem, instead of using RGB2GRAY transform, a HSV color transform is applied.(Figure from wikipedia) <br>
+![alt text][image12] <br>
+HSV is better as RGB when we want to detect a certain color. Especially under low light condition. By apply HSV into the pipeline to replace gray scale transform, the detail of lane lines are preserved even when the car is driving through a shadow area. The results are shown in the following figures. <br>
+![alt text][image13] <br>
+![alt text][image14] <br>
+
+Another shortcoming is that when the lane line or the vehicle motion is changing rapidly, the detected lane line will also jitter  and not stable. To deal with that, I use a buffer, which store stable lines from the previous 30 frames. The new stable line will be the average of these data. This method improve the stability of lines segnificantly.
+
+The last shortcomings is that, this pipeline use Hough line transform, which works not well when the turning radius is too large.
+
+## **Suggest Possible Improvement to the Pipeline:**
+
+Although so far the pipeline working fine with all the cases in test videos, a possible improvement would be apply a kalman filter to further increasse the stability. By doing that, the drawn lane lines will be more stable. We can also use advanced hough transform to detect curvature to further improve to line fitting stability.
 
 
-The Project
----
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
+[//]: # (Image References)
+[image1]: ./writeup_material/input_image.png
+[image2]: ./writeup_material/gray_scale.png
+[image3]: ./writeup_material/gray_smooth.png
+[image4]: ./writeup_material/canny.png
+[image5]: ./writeup_material/region_of_interest.png
+[image6]: ./writeup_material/hough_line.png
+[image7]: ./writeup_material/hough_line_stable.png
+[image8]: ./writeup_material/output_image_stable.png
+[image9]: ./writeup_material/challenge_input.png
+[image10]: ./writeup_material/challenge_RGB_canny.png
+[image11]: ./writeup_material/challenge_RGB_output.png
+[image12]: ./writeup_material/HSV_wiki.png
+[image13]: ./writeup_material/challenge_HSV_canny.png
+[image14]: ./writeup_material/challenge_HSV_output.png
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
 
-**Step 2:** Open the code in a Jupyter Notebook
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out <A HREF="https://www.packtpub.com/books/content/basics-jupyter-notebook-and-python" target="_blank">Cyrille Rossant's Basics of Jupyter Notebook and Python</A> to get started.
+```python
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
-
-`> jupyter notebook`
-
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
-
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
-
+```
